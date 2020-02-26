@@ -13,7 +13,8 @@ def server():
         conn, addr = s.accept()
         with conn:
             while True:
-                conn.sendall('[*] Connected to ' + ip)
+                connected = '[*] Connected to {}'.format(addr)
+                conn.sendall(connected.encode())
                 data = conn.recv(1024)
                 if not data:
                     break
@@ -22,9 +23,9 @@ def server():
 def client():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((host, port))
-        print('# ')
         msg = input()
-        s.sendall(msg)
+        print('# ')
+        s.sendall(msg.encode())
 
 
 if __name__ == '__main__':
