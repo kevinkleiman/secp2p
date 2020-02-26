@@ -7,7 +7,7 @@ port = 8000
 
 def server():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind((host, port))
+        s.bind(('localhost', port))
         s.listen()
         print('[*] Waiting for Connection'.format(port))
         conn, addr = s.accept()
