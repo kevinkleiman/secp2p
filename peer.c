@@ -8,8 +8,6 @@
 
 #define PORT 8080
 
-int CONNECTION_ACCEPTED = 0;
-
 void *client_start(void *HOST) {
 	int network_socket;
 	network_socket = socket(AF_INET, SOCK_STREAM, 0);
@@ -21,7 +19,8 @@ void *client_start(void *HOST) {
 	server_address.sin_addr.s_addr = inet_addr(HOST);
 	
 	int connection_status = connect(network_socket, (struct socketaddr *) &server_address, 
-							sizeof(server_address));	
+							sizeof(server_address));
+	printf("%d\n", connection_status);	
 	if (connection_status == -1) {
 		printf("Socket connection error!\n");
 		exit(1);
@@ -37,7 +36,7 @@ void *client_start(void *HOST) {
 		}
 	}
 	
-	printf("REMOTE closed the connection");
+	printf("REMOTE closed the connection\n");
 	close(network_socket);
 }
 
@@ -62,7 +61,6 @@ void *server_start(void *HOST) {
 	printf("Connection Established to %s...\n", HOST);
 	
 	while (strcmp(msg, "CLOSE_CONN") != 0) {
-		printf(">> ");
 		scanf("%s", &msg);
 		printf("YOU -> %s\n", msg);
 		send(client_socket, msg, sizeof(msg), 0);
@@ -76,16 +74,16 @@ int main(int argc, char const *argv[]) {
 		exit(1);
 	}
 	
-	// Set up server thread
+	// Set up threads
 	pthread_t server_id;
-	pthread_create(&server_id, NULL, server_start, (void *) argv[1]);
-	pthread_join(server_id, NULL);
-	
-	// Set up client thread
 	pthread_t client_id;
-	pthread_create(&client_id, NULL, client_start, (void *) argv[1]);
-	pthread_join(client_id, NULL);
 	
+	pthread_create(&server_id, NULL, server_start, (void *) argv[1]);
+	pthread_create(&client_id, NULL, client_start, (void *) argv[2]);
+	
+	pthread_join(server_id, NULL);
+	pthread_join(client_id, NULL);
+
 	return 0;
 }
 
