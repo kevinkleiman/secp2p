@@ -7,6 +7,7 @@
 #include <pthread.h>
 
 #define PORT 8080
+#define MAX_MESSAGE_SIZE 256
 
 void *client_start(void *HOST) {
 	int network_socket;
@@ -20,13 +21,12 @@ void *client_start(void *HOST) {
 	
 	int connection_status = connect(network_socket, (struct socketaddr *) &server_address, 
 							sizeof(server_address));
-	printf("%d\n", connection_status);	
 	if (connection_status == -1) {
 		printf("Socket connection error!\n");
 		exit(1);
 	}	
 	
-	char server_response[256];
+	char server_response[MAX_MESSAGE_SIZE];
 	
 	// Wait for message or close connection
 	while (strcmp(server_response, "CLOSE_CONN") != 0) {
@@ -36,13 +36,13 @@ void *client_start(void *HOST) {
 		}
 	}
 	
-	printf("REMOTE closed the connection\n");
+	printf("\nREMOTE closed the connection\n");
 	close(network_socket);
 }
 
 void *server_start(void *HOST) {
 	int server_socket;
-	char msg[256];
+	char *msg = malloc(MAX_MESSAGE_SIZE);
 	server_socket = socket(AF_INET, SOCK_STREAM, 0);
 	
 	// Set up struct for socket info
@@ -62,16 +62,22 @@ void *server_start(void *HOST) {
 	
 	while (strcmp(msg, "CLOSE_CONN") != 0) {
 		printf("\n>> ");
-		scanf("%s", &msg);
+		fgets(msg, MAX_MESSAGE_SIZE, stdin);
 		printf("YOU -> %s\n", msg);
-		send(client_socket, msg, sizeof(msg), 0);
+		send(client_socket, msg, MAX_MESSAGE_SIZE, 0);
 	}
+	
+	free(msg);
 }
 
 int main(int argc, char const *argv[]) {
 	// Command line arg check
 	if (argc < 2) {
-		printf("No agrument supplied: Remote Host\n");
+		printf("No agrument supplied: Local IPV4\n");
+		exit(1);
+	}
+	else if (argc < 3) {
+		printf("No argument supplied: Remote IPV4\n");
 		exit(1);
 	}
 	
