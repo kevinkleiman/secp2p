@@ -61,6 +61,7 @@ void *server_start(void *HOST) {
 	printf("Connection Established to %s...\n", HOST);
 	
 	while (strcmp(msg, "CLOSE_CONN") != 0) {
+		printf("\n>> ");
 		scanf("%s", &msg);
 		printf("YOU -> %s\n", msg);
 		send(client_socket, msg, sizeof(msg), 0);
