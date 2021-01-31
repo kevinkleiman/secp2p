@@ -8,25 +8,28 @@
 
 #define PORT 8080
 
-void *client_start() {
+int CONNECTION_ACCEPTED = 0;
+
+void *client_start(void *HOST) {
 	int network_socket;
 	network_socket = socket(AF_INET, SOCK_STREAM, 0);
 	
+	// Set up struct for socket info
 	struct sockaddr_in server_address;
 	server_address.sin_family = AF_INET;
 	server_address.sin_port = htons(PORT);
-	server_address.sin_addr.s_addr = inet_addr("127.0.0.1");
+	server_address.sin_addr.s_addr = inet_addr(HOST);
 	
 	int connection_status = connect(network_socket, (struct socketaddr *) &server_address, 
 							sizeof(server_address));	
 	if (connection_status == -1) {
-		printf("Socket connection error...\n");
+		printf("Socket connection error!\n");
+		exit(1);
 	}	
-	
-	printf("CLIENT STARTED\n");
 	
 	char server_response[256];
 	
+	// Wait for message or close connection
 	while (strcmp(server_response, "CLOSE_CONN") != 0) {
 		recv(network_socket, &server_response, sizeof(server_response), 0);
 		if (strcmp(server_response, "") != 0) {
@@ -38,38 +41,51 @@ void *client_start() {
 	close(network_socket);
 }
 
-void *server_start() {
-	char test_message[256] = "Test message!!!";
-	
+void *server_start(void *HOST) {
 	int server_socket;
+	char msg[256];
 	server_socket = socket(AF_INET, SOCK_STREAM, 0);
 	
+	// Set up struct for socket info
 	struct sockaddr_in server_address;
 	server_address.sin_family = AF_INET;
 	server_address.sin_port = htons(PORT);
-	server_address.sin_addr.s_addr = inet_addr("127.0.0.1");
+	server_address.sin_addr.s_addr = inet_addr(HOST);
 	
+	// Bind and listen
 	bind(server_socket, (struct sockaddr*) &server_address, sizeof(server_address));
 	listen(server_socket, 5);
-	
-	printf("SERVER STARTED\n");
+	printf("Listening for connection from %s...\n", HOST);
 	
 	int client_socket;
 	client_socket = accept(server_socket, NULL, NULL);
+	printf("Connection Established to %s...\n", HOST);
 	
-	for (int i = 0; i < 10; i++) {
-		sleep(1);
-		send(client_socket, test_message, sizeof(test_message), 0);
+	while (strcmp(msg, "CLOSE_CONN") != 0) {
+		printf(">> ");
+		scanf("%s", &msg);
+		printf("YOU -> %s\n", msg);
+		send(client_socket, msg, sizeof(msg), 0);
 	}
 }
 
 int main(int argc, char const *argv[]) {
-	pthread_t client_id;
+	// Command line arg check
+	if (argc < 2) {
+		printf("No agrument supplied: Remote Host\n");
+		exit(1);
+	}
+	
+	// Set up server thread
 	pthread_t server_id;
-	pthread_create(&server_id, NULL, server_start, NULL);
-	pthread_create(&client_id, NULL, client_start, NULL);
-	pthread_join(client_id, NULL);
+	pthread_create(&server_id, NULL, server_start, (void *) argv[1]);
 	pthread_join(server_id, NULL);
+	
+	// Set up client thread
+	pthread_t client_id;
+	pthread_create(&client_id, NULL, client_start, (void *) argv[1]);
+	pthread_join(client_id, NULL);
+	
 	return 0;
 }
 
