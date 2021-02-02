@@ -32,12 +32,13 @@ void *client_start(void *HOST) {
 	while (strcmp(server_response, "CLOSE_CONN") != 0) {
 		recv(network_socket, &server_response, sizeof(server_response), 0);
 		if (strcmp(server_response, "") != 0) {
-			printf("\nREMOTE -> %s\n", server_response);		
+			printf("REMOTE -> %s\n", server_response);		
 		}
 	}
 	
 	printf("\nREMOTE closed the connection\n");
 	close(network_socket);
+	exit(1);
 }
 
 void *server_start(void *HOST) {
@@ -58,7 +59,7 @@ void *server_start(void *HOST) {
 	
 	int client_socket;
 	client_socket = accept(server_socket, NULL, NULL);
-	printf("Connection Established to %s...\n", HOST);
+	printf("Connection Established to %s...\n\n", HOST);
 	
 	while (strcmp(msg, "CLOSE_CONN") != 0) {
 		fgets(msg, MAX_MESSAGE_SIZE, stdin);
@@ -67,6 +68,7 @@ void *server_start(void *HOST) {
 	}
 	
 	free(msg);
+	exit(0);
 }
 
 int main(int argc, char const *argv[]) {
