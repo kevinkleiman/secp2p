@@ -8,6 +8,15 @@
 
 #define PORT 8080
 #define MAX_MESSAGE_SIZE 256
+#define KEY_SIZE 256
+
+int encrypt(void *buffer, int buffer_len, char *IV, char *key, int key_len) {
+
+}
+
+int decrypt(void *buffer, int buffer_len, char *IV, char *key, int key_len) {
+
+}
 
 void *client_start(void *HOST) {
 	int network_socket;
